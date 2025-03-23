@@ -1205,6 +1205,7 @@ static int got354(char *from, char *msg)
         }
         flags = newsplit(&msg);     /* Grab the flags */
         account = newsplit(&msg);   /* Grab the account name */
+        fixcolon(account);
         got352or4(chan, user, host, nick, flags, account);
       }
     }
@@ -1956,13 +1957,12 @@ static int gotjoin(char *from, char *channame)
 
   strlcpy(uhost, from, sizeof buf);
   nick = splitnick(&uhost);
+  // :nick!user@host JOIN :#chan
   chname = newsplit(&channame);
+  fixcolon(chname);
   if (extjoin) {
     // :nick!user@host JOIN #chan account :realname
     account = newsplit(&channame);
-  } else {
-    // :nick!user@host JOIN :#chan
-    fixcolon(chname);
   }
   chan = findchan_by_dname(chname);
   if (!chan && chname[0] == '!') {
