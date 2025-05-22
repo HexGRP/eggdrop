@@ -1,34 +1,77 @@
-# GOAL: Demonstrate how to use a Python bind to call a Python function
+# Enhanced greet.py - Demonstrates improved rehash handling and bind management
 
 # Load bind from eggdrop, not eggdrop.tcl. Loading it from eggdrop.tcl would cause
 # the bind to call a Tcl proc, not the python function.
-from eggdrop import bind
+from eggdrop import bind, register_rehash_handler
 
 # Load any Tcl commands you want to use from the eggdrop.tcl module.
-from eggdrop.tcl import putmsg
+from eggdrop.tcl import putmsg, putlog
 
-# This is a proc that calls the putmsg Tcl command. Note that, slightly different than Tcl,
-# each argument is separated by a comma instead of just a space
+# Global list to track our binds
+GREET_BINDS = []
+
 def joinGreetUser(nick, host, handle, channel, **kwargs):
-  putmsg(channel, f"Hello {nick}, welcome to {channel}")
+    """Greet regular users joining the channel"""
+    try:
+        putmsg(channel, f"Hello {nick}, welcome to {channel}!")
+    except Exception as e:
+        putlog(f"Error in joinGreetUser: {e}")
 
 def joinGreetOp(nick, host, handle, channel, **kwargs):
-  putmsg(channel, f"{nick} is an operator on this channel!")
+    """Special greeting for operators"""
+    try:
+        putmsg(channel, f"{nick} is an operator on this channel!")
+    except Exception as e:
+        putlog(f"Error in joinGreetOp: {e}")
 
-# For now, unfortunately if Eggdrop is rehashed, previously existing binds will be duplicated.
-# This is example code to check for previously-existbing binds after the script reloaded and 
-# delete them.
-if 'GREET_BINDS' in globals():
-  for greetbind in GREET_BINDS:
-    greetbind.unbind()
-  del GREET_BINDS
+def cleanup_binds():
+    """Clean up existing binds before creating new ones"""
+    global GREET_BINDS
+    
+    putlog("Cleaning up greet.py binds...")
+    for greetbind in GREET_BINDS:
+        try:
+            greetbind.unbind()
+        except Exception as e:
+            putlog(f"Error unbinding: {e}")
+    
+    GREET_BINDS.clear()
+    putlog("Greet.py binds cleaned up successfully")
 
-# Continuing from the above section of code, the GREET_BINDS list is created to track the binds
-# created by this script, and then the binds are added to it.
-GREET_BINDS = list()
-# Call binds at the end of the script, not the top- the functions must be defined!
-GREET_BINDS.append(bind("join", "*", "*", joinGreetUser))
-# Again, arguments are separated with a comma. This bind requires the 'o' flag to be triggered.
-GREET_BINDS.append(bind("join", "o", "*", joinGreetOp))
+def setup_binds():
+    """Set up all binds for this script"""
+    global GREET_BINDS
+    
+    try:
+        # Create the binds
+        GREET_BINDS.append(bind("join", "*", "*", joinGreetUser))
+        GREET_BINDS.append(bind("join", "o", "*", joinGreetOp))
+        
+        putlog(f"Greet.py: Created {len(GREET_BINDS)} binds")
+        
+    except Exception as e:
+        putlog(f"Error setting up greet.py binds: {e}")
 
-print('Loaded greet.py')
+def on_rehash():
+    """Handler called when eggdrop is rehashed"""
+    putlog("Greet.py: Handling rehash event")
+    cleanup_binds()
+    setup_binds()
+
+# Main script execution
+
+# Clean up any existing binds from previous loads
+if 'GREET_BINDS' in globals() and GREET_BINDS:
+    cleanup_binds()
+
+# Set up new binds
+setup_binds()
+
+# Register our rehash handler
+try:
+    register_rehash_handler(on_rehash)
+    putlog("Greet.py: Registered rehash handler")
+except Exception as e:
+    putlog(f"Greet.py: Could not register rehash handler: {e}")
+
+putlog("Greet.py loaded successfully")

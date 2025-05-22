@@ -1,6 +1,5 @@
 /*
  * python.c -- python interpreter handling for python.mod
- * FIXED VERSION - Addresses memory leaks, bind duplication, and Windows compatibility
  */
 
 /*
@@ -40,10 +39,6 @@
 //static PyObject *pymodobj;
 static PyObject *pirp, *pglobals;
 
-// Track loaded scripts for proper cleanup on rehash
-static PyObject *loaded_scripts = NULL;
-static int rehash_in_progress = 0;
-
 #undef global
 static Function *global = NULL;
 static PyThreadState *_pythreadsave;
@@ -54,52 +49,22 @@ EXPORT_SCOPE char *python_start(Function *global_funcs);
 
 static int python_expmem()
 {
-  return 0; // TODO: Implement proper memory tracking
+  return 0; // TODO
 }
 
 static int python_gil_unlock() {
-  if (_pythreadsave == NULL) {
-    _pythreadsave = PyEval_SaveThread();
-  }
+  _pythreadsave = PyEval_SaveThread();
   return 0;
 }
 
 static int python_gil_lock() {
-  if (_pythreadsave != NULL) {
-    PyEval_RestoreThread(_pythreadsave);
-    _pythreadsave = NULL;
-  }
+  PyEval_RestoreThread(_pythreadsave);
   return 0;
 }
 
-static char *detect_python_executable() {
-  const char *venv = getenv("VIRTUAL_ENV");
-  static char venvpython[PATH_MAX];
-  
-  if (venv) {
-#ifdef __WIN32__
-    snprintf(venvpython, sizeof venvpython, "%s\\Scripts\\python.exe", venv);
-#else
-    snprintf(venvpython, sizeof venvpython, "%s/bin/python3", venv);
-#endif
-    // Check if file exists
-    FILE *test = fopen(venvpython, "r");
-    if (test) {
-      fclose(test);
-      return venvpython;
-    }
-  }
-  
-  // Fallback to system python
-#ifdef __WIN32__
-  return "python.exe";
-#else
-  return "python3";
-#endif
-}
-
 static char *init_python() {
-  const char *python_exe;
+  const char *venv;
+  char venvpython[PATH_MAX];
   PyObject *pmodule;
   PyStatus status;
   PyConfig config;
@@ -107,41 +72,30 @@ static char *init_python() {
   PyConfig_InitPythonConfig(&config);
   config.install_signal_handlers = 0;
   config.parse_argv = 0;
-  
-  // Better Python executable detection
-  python_exe = detect_python_executable();
-  status = PyConfig_SetBytesString(&config, &config.executable, python_exe);
-  if (PyStatus_Exception(status)) {
-    PyConfig_Clear(&config);
-    return "Python: Fatal error: Could not set Python executable";
+  if ((venv = getenv("VIRTUAL_ENV"))) {
+    snprintf(venvpython, sizeof venvpython, "%s/bin/python3", venv);
+    status = PyConfig_SetBytesString(&config, &config.executable, venvpython);
+    if (PyStatus_Exception(status)) {
+      PyConfig_Clear(&config);
+      return "Python: Fatal error: Could not set venv executable";
+    }
   }
-  
   status = PyConfig_SetBytesString(&config, &config.program_name, argv0);
   if (PyStatus_Exception(status)) {
     PyConfig_Clear(&config);
     return "Python: Fatal error: Could not set program base path";
   }
-  
   if (PyImport_AppendInittab("eggdrop", &PyInit_eggdrop) == -1) {
     PyConfig_Clear(&config);
     return "Python: Error: could not extend in-built modules table";
   }
-  
   status = Py_InitializeFromConfig(&config);
   if (PyStatus_Exception(status)) {
     PyConfig_Clear(&config);
     return "Python: Fatal error: Could not initialize config";
   }
   PyConfig_Clear(&config);
-  
-  // Check if PyDateTime_IMPORT was already called
-  if (!PyDateTimeAPI) {
-    PyDateTime_IMPORT;
-    if (!PyDateTimeAPI) {
-      return "Python: Error: Could not import datetime module";
-    }
-  }
-  
+  PyDateTime_IMPORT;
   pmodule = PyImport_ImportModule("eggdrop");
   if (!pmodule) {
     return "Error: could not import module 'eggdrop'";
@@ -150,67 +104,29 @@ static char *init_python() {
   pirp = PyImport_AddModule("__main__");
   pglobals = PyModule_GetDict(pirp);
 
-  // Initialize script tracking
-  loaded_scripts = PyDict_New();
-  if (!loaded_scripts) {
-    return "Error: could not create script tracking dict";
-  }
-
   PyRun_SimpleString("import sys");
   // TODO: Relies on pwd() staying eggdrop main dir
   PyRun_SimpleString("sys.path.append(\".\")");
   PyRun_SimpleString("import eggdrop");
   PyRun_SimpleString("sys.displayhook = eggdrop.__displayhook__");
 
-  // Set up rehash handler
-  PyRun_SimpleString(
-    "import sys\n"
-    "if not hasattr(sys, '_eggdrop_rehash_handlers'):\n"
-    "    sys._eggdrop_rehash_handlers = []\n"
-  );
-
   return NULL;
-}
-
-// Function to handle rehash cleanup
-static void python_pre_rehash() {
-  rehash_in_progress = 1;
-  
-  // Execute any registered rehash handlers
-  PyRun_SimpleString(
-    "import sys\n"
-    "if hasattr(sys, '_eggdrop_rehash_handlers'):\n"
-    "    for handler in sys._eggdrop_rehash_handlers:\n"
-    "        try:\n"
-    "            handler()\n"
-    "        except Exception as e:\n"
-    "            print(f'Error in rehash handler: {e}')\n"
-  );
-}
-
-static void python_post_rehash() {
-  rehash_in_progress = 0;
 }
 
 static void python_report(int idx, int details)
 {
-  if (details) {
+  if (details)
     dprintf(idx, "    python version: %s (header version " PY_VERSION ")\n", Py_GetVersion());
-    if (loaded_scripts && PyDict_Size(loaded_scripts) > 0) {
-      dprintf(idx, "    loaded scripts: %d\n", (int)PyDict_Size(loaded_scripts));
-    }
-  }
 }
 
 static char *python_close()
 {
-  /* Improved cleanup before forbidding unload */
-  if (loaded_scripts) {
-    Py_DECREF(loaded_scripts);
-    loaded_scripts = NULL;
-  }
-  
-  /* Still forbid unloading due to Python limitations */
+  /* Forbid unloading, because:
+   * - Reloading (Reexecuting PyDateTime_IMPORT) would crash
+   * - Py_FinalizeEx() does not clean up everything
+   * - Complexity regarding running python threads
+   * see https://bugs.python.org/issue34309 for details
+   */
   return "The " MODULE_NAME " module is not allowed to be unloaded.";
 }
 
@@ -246,7 +162,5 @@ char *python_start(Function *global_funcs)
   add_tcl_commands(my_tcl_cmds);
   add_hook(HOOK_PRE_SELECT, (Function)python_gil_unlock);
   add_hook(HOOK_POST_SELECT, (Function)python_gil_lock);
-  add_hook(HOOK_PRE_REHASH, (Function)python_pre_rehash);
-  add_hook(HOOK_POST_REHASH, (Function)python_post_rehash);
   return NULL;
 }
