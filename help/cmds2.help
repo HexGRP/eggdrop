@@ -38,7 +38,7 @@
    that match against your wildcard.
 
 See also: +ignore, -ignore
-%{help=link}%{+t}
+%{help=link}%{+m}
 ###  %blink%b [via-bot] <bot-to-link>
    Attempts to link a bot to the botnet. The local bot must have a bot record
    for the remote bot in order for it to be linked (see %b'.help +bot'%b). If
@@ -132,7 +132,6 @@ See also: module, loadmod, unloadmod
 ###  %bnewpass%b <password>
    Changes your password on the bot. This is similar to the '/msg <bot> pass'
    command, except you don't need to specify your old password.
-%{+t}
 
 See also: chpass
 %{help=handle}%{-}
@@ -141,7 +140,7 @@ See also: chpass
    bot will know you as from this point forward. It is used to log into the
    bot, and for the /msg IDENT command, etc.
 
-See also: newpass%{+t}, chhandle, chpass
+See also: newpass, chhandle, chpass
 %{help=note}%{-}
 ###  %bnote%b <nickname[@bot]> <message>
    Sends a private note to a user on the partyline. If that user is currently
@@ -180,7 +179,7 @@ See also: save, reload, restart, relang
    The local bot must, however, have a bot record for the bot you wish to
    relay to. Typing .quit or "*bye*" on a line by itself will end the relay.
 
-See also: bots%{+t}, +bot, -bot
+See also: bots, +bot, -bot
 %{help=reload}%{+m|m}
 ###  %breload%b
    Reloads the bot's user file, discarding any changes made since the last
@@ -255,7 +254,7 @@ See also: fixcodes
    Lets you assume the identity of another user. If you are a global owner,
    this does not require a password. Otherwise, you will be asked for the
    user's password. %b.quit%b returns you to your original handle.
-%{help=trace}%{+t}
+%{help=trace}%{+m}
 ###  %btrace%b <bot>
    Sends out a trace signal to another bot. If/when the trace signal returns,
    (and it should!) you will get an output that looks something like this:
@@ -265,7 +264,7 @@ See also: fixcodes
    It should also return the time in seconds taken for the trace to occur.
 
 See also: bots, bottree, vbottree
-%{help=unlink}%{+t}
+%{help=unlink}%{+m}
 ###  %bunlink%b <bot/*>
    This disconnects the specified bot from the botnet (assuming it was linked
    in the first place). Some bots (sharebots in particular) might not allow you
@@ -291,8 +290,8 @@ See also: modules, module, loadmod
       Total users: 2
 
    Each user's nickname will be listed in the first column, preceded by a "*"
-   if they are a bot owner, "+" if they are a master, "%%" if they are a botnet
-   master, or "@" if they are an op. In the next column, the bot the user is
+   if they are a bot owner, "^" if they are a master, "@" if they are an op,
+   "%" if they are a halfop, or "+" for other users. In the next column, the bot the user is
    connected to will be displayed. In the third column, the host is shown. If
    the user is away, the away message will be shown. Likewise, if they are
    idle, their idle time will be displayed.
@@ -308,7 +307,7 @@ See also: who, bots, chat
 
    For example:
       [23:21] #Wcc# who
-      Party line members:  (* = owner, + = master, @ = op)
+      Party line members:  (* = owner, ^ = master, @ = op, % = halfop, + = others)
       *Wcc       telnet@xxx.atlaga.adelphia.net (idle 17m)
       *Wcc       telnet@xxx.atlaga.adelphia.net
       Bots connected:
@@ -316,8 +315,8 @@ See also: who, bots, chat
 
    The first section is people on your current channel (the party line, if you
    haven't changed channels) who are on the bot. A '*' will precede the handle
-   if they are a bot owner, "+" if they are a master, "%%" if they are a botnet
-   master, or "@" if they are an op. The user's nickname, hostname, and
+   if they are a bot owner, '^' if they are a master, '@' if they are an op,
+   '%' if they are a halfop, or '+' for other users. The user's nickname, hostname, and
    possibly an idle time and/or away message will be displayed.%{+n} Owners
    will also see the user's dcc idx.%{-}
 
@@ -358,51 +357,45 @@ See also: whom
       %bLAST%b   - the time or date that the user was last on the channel
 
    Valid global flags:
-      %ba%b - autoop (user is opped automatically upon joining any channel)
-      %bb%b - bot (user is a bot)
-      %bc%b - common (see %b'.help common'%b)
-      %bd%b - deop (user cannot gain ops in any channel)
-      %be%b - nethack-exempt (user is exempted from stopnethack protection)
-      %bf%b - friend (user is not punished for flooding, etc on any channel)
-      %bg%b - autovoice (user is voiced automatically upon joining any channel)
-      %bh%b - highlight (use bold text in help/text files)
-      %bj%b - janitor (user is a file-area master)
+      
+   ADMINISTRATIVE HIERARCHY:
+      %bn%b - owner (absolute control over bot and all channels)
+      %bm%b - master (full bot administrative access, gets +o)
+      %bo%b - op (full channel operator - can set any mode)
+      
+   CHANNEL ROLES:
+      %bl%b - halfop (constrained channel operator with limits)
+      %bv%b - voice (channel voice privilege)
+      
+   SYSTEM ACCESS:
+      %bp%b - party-line (access to bot partyline system)
+      
+   SECURITY/UTILITY FLAGS:
+      %bj%b - reject (prevented from being granted privileges)
       %bk%b - autokick (user is kicked and banned automatically)
-      %bl%b - halfop (user has halfop access to all of the bot's channels)
-      %bm%b - master (user has access to almost every feature of the bot)
-      %bn%b - owner (user has absolute control over the bot)
-      %bo%b - op (user has op access to all of the bot's channels)
-      %bp%b - party-line (user has access to the partyline)
-      %bq%b - quiet (user cannot gain voice on any channel)
-      %br%b - dehalfop (user cannot gain halfops on any channel)
-      %bt%b - botnet master (user has access to features related to the botnet)
-      %bu%b - unshared (user's user record is not sent to other bots)
-      %bv%b - voice (user gets +v automatically on +autovoice channels)
+      %bb%b - bot (user is a bot)
+      %bu%b - unshared (user record is not sent to other bots)
       %bw%b - wasop-test (needs wasop test for +stopnethack procedure)
-      %bx%b - xfer (user has filesystem access)
-      %by%b - autohalfop (user is auto-halfopped upon joining any channel)
-      %bz%b - washalfop-test (needs washalfop test for +stopnethack procedure)
+      %be%b - exempt (exempted from stopnethack protection)
+      %bz%b - washalfop-test (needs washalfop test for +stopnethack)
+      %bh%b - highlight (display highlighting in partyline)
+      %bx%b - xfer (file area access - requires transfer module)
 
       There are also 26 user-defined global flags (A-Z).
 
    Users can also have flags specific to a channel:
 
-      %ba%b - autoop (user is opped automatically upon joining the channel)
-      %bd%b - deop (user cannot gain ops on the channel)
-      %be%b - nethack-exempt (user is exempted from stopnethack protection)
-      %bf%b - friend (user is not punished for flooding, etc)
-      %bg%b - autovoice (user is voiced automatically upon joining the channel)
-      %bk%b - autokick (user is kicked and banned automatically)
-      %bl%b - halfop (user has halfop access to the channel)
-      %bm%b - master (user is a channel master)
-      %bn%b - owner (user is a channel owner)
+   NOTE: Auto-modes (autoop, autovoice, autohalfop) are now handled by
+         channel settings. Use .chanset #channel +autoop instead of user flags.
+
       %bo%b - op (user has op access to the channel)
-      %bq%b - quiet (user cannot gain voice on the channel)
-      %br%b - dehalfop (user cannot gain halfops on the channel)
-      %bv%b - voice (user gets +v automatically if the channel is +autovoice)
+      %bl%b - halfop (user has halfop access to the channel)
+      %bv%b - voice (user has voice access to the channel)
+      %bj%b - reject (user cannot gain privileges on the channel)
+      %bk%b - autokick (user is kicked and banned automatically)
+      %be%b - exempt (user is exempted from stopnethack protection)
       %bw%b - wasop-test (needs wasop test for +stopnethack procedure)
-      %by%b - autohalfop (user is auto-halfopped upon joining the channel)
-      %bz%b - washalfop-test (needs washalfop test for +stopnethack procedure)
+      %bz%b - washalfop-test (needs washalfop test for +stopnethack)
 
       There are also 26 user-defined channel flags (A-Z).
 
@@ -436,7 +429,7 @@ See also: whom
 
    Masters: if the user has a comment, you will see it under "COMMENT:".%{-}
 
-See also: match, who, whom%{+m|m}, chattr%{+t}, botattr
+See also: match, who, whom%{+m|m}, chattr, botattr
 %{help=status}%{+m|m}
 ###  %bstatus%b
 ###  %bstatus all%b
@@ -508,3 +501,21 @@ See also: bots, botinfo, bottree
    Changes the SSL certificate fingerprint associated with your user account.
    Not specifying a value for 'fingerprint' will remove an existing certificate
    associated with your user account.
+%{help=chanset}%{+m|m}
+### %bchanset <#channel> <setting>%b
+   Channel Auto-Mode Settings (replaces old +a, +g, +y flags):
+   
+   Instead of using user flags for auto-modes, use channel settings:
+   
+   %b.chanset #channel +autoop%b     - Auto-op users with +o flag
+   %b.chanset #channel +autovoice%b   - Auto-voice users with +v flag  
+   %b.chanset #channel +autohalfop%b  - Auto-halfop users with +l flag
+   
+   Examples:
+   %b.chattr helper +o%b              - Give helper the op role
+   %b.chanset #main +autoop%b         - Enable auto-op on #main
+   (Now helper gets auto-opped when joining #main)
+   
+   This system provides per-channel control instead of global auto-modes.
+   
+See also: chattr, whois

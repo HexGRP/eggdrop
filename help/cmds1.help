@@ -1,4 +1,4 @@
-%{help=+bot}%{+t}
+%{help=+bot}%{+m}
 ###  %b+bot%b <handle> [address [[+]bot port[/[+]user port]]] [host]
    Creates a user record for a new bot with the handle given. If no hostmask
    is specified, the bot will try to automatically add a host from the channel.
@@ -7,7 +7,7 @@
    the port with a plus sign will only allow secure (SSL) linking to be used.
 
 See also: -bot
-%{help=+host}%{+t|m}
+%{help=+host}%{+m}
 ###  %b+host%b [handle] <hostmask>
    Adds a hostmask to a user's user record. Hostmasks are used to identify your
    handle on IRC. If a handle is not specified, the hostmask will be added to
@@ -33,7 +33,7 @@ See also: -user, +host, -host
    Adds the provided services account name to a handle.
 
 See also: -account
-%{help=-bot}%{+t}
+%{help=-bot}%{+m}
 ###  %b-bot%b <bot>
    This is exactly the same as %b'.-user'%b (it removes a user record). It is
    included for convenience.
@@ -66,7 +66,7 @@ See also: +user, +bot, -bot
 %{+m|m}
 
 See also: +account
-%{help=addlog}%{+to|o}
+%{help=addlog}%{+o|o}
 ###  %baddlog%b <text>
    Adds your comment to the bot's logfile. Bot masters can go back later and
    review the log, and will see your comment (with your handle attached). This
@@ -94,7 +94,7 @@ See also: away
    settings.
 
 See also: reload, rehash, save
-%{help=banner}%{+t}
+%{help=banner}%{+m}
 ###  %bbanner%b <text>
    Displays a message to everyone currently using the bot's party line or file
    area. This is useful for announcing that the bot will go down, etc.
@@ -117,13 +117,13 @@ See also: reload, rehash, save
    view more binds by adding 'all' to the end of the command.
 
 See also: tcl
-%{help=boot}%{+t}
+%{help=boot}%{+m}
 ###  %bboot%b <handle[@bot]> [reason]
    Kicks a user off the party line and displays the reason, if you specify
    one. You can also specify a bot, and attempt to boot someone from another
    bot on the botnet, though it may be rejected if that bot does not allow
    remote boots. You can not boot a bot owner.
-%{help=botattr}%{+t}
+%{help=botattr}%{+m}
 ###  %bbotattr%b <handle> [flags] [channel]
    Lets you view and change the bot flags for a bot. For example, to set
    "Fred1" +share and -hub, you would do '.botattr Fred1 +s-h.'
@@ -162,7 +162,7 @@ See also: bottree, vbottree, botinfo
    are sharing, a + will be indicated, or a ? if nothing is known.
 
 See also: bots, botinfo, vbottree
-%{help=chaddr}%{+t}
+%{help=chaddr}%{+m}
 ###  %bchaddr%b <bot> <address> [[+]bot port[/[+]user port]]
    Changes the address for a bot. This is the address your bot will try to
    connect to when linking. If the bot has a separate port for bots and users,
@@ -212,18 +212,18 @@ See also: console
    Whether or not you change any flags, it will show you the user's attributes
    afterwards. To get a list of all possible flags, see %b'.help whois'%b.
 
-   %bNOTES:%b Only the owner may add or remove the 'n' (owner), 'm' (master) or
-          't' (botnet master) flags. It is pointless to -n a permanent owner.
+   %bNOTES:%b Only the owner may add or remove the 'n' (owner) or 'm' (master)
+          flags. It is pointless to -n a permanent owner.
           You must remove the permanent owner in the config file.
 
 See also: whois, botattr
-%{help=chhandle}%{+t}
+%{help=chhandle}%{+m}
 ###  %bchhandle%b <oldhandle> <newhandle>
    Changes the handle of a user. For example, to change the handle of user
    'gavroche' to 'jamie', you would use 'chhandle gavroche jamie'.
 
 See also: chpass
-%{help=chpass}%{+t}
+%{help=chpass}%{+m}
 ###  %bchpass%b <handle> [newpassword]
    Changes a user's password. If you do not specify the new password, the user
    effectively no longer has a password set. A password is needed to get ops,
@@ -237,7 +237,7 @@ See also: chhandle
 ###  %bcomment%b <user> <comment>
    Creates or changes the comment field for a user. The comment field can only
    be seen via 'whois' or 'match'. Non-masters cannot see the comment field.
-%{help=console}%{+to|o}
+%{help=console}%{+o|o}
 ###  %bconsole%b [channel] [modes]
    Changes your console level so that you will see only the types of console
    messages that you want to. Your current console channel is the channel (that
@@ -280,7 +280,7 @@ See also: chhandle
 ###  %bconsole%b <user> [channel] [modes]
    This is used to set the console level of another user. This can even be used
    on users who normally would not be able to set their own console mode.
-%{help=resetconsole}%{+to|o}
+%{help=resetconsole}%{+o|o}
 ###  %bresetconsole%b
    Changes your console level to the default settings from the configfile.
 %{+m|m}

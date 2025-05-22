@@ -12,12 +12,6 @@ DCC commands for %B, %V:
    For ops:
       %baddlog       console      match        whois%b
       %bresetconsole%b
-%{+t}
-   For botnet masters:
-      %b+bot         botattr      chhandle     chpass%b
-      %b+host        -bot         link         chaddr%b
-      %bboot         unlink       banner       dccstat%b
-      %b+account%b
 %{+m|m}
    For channel masters:
       %bchattr       save         backup       reload%b
@@ -72,25 +66,7 @@ All commands begin with '.', and all else goes to the party line.
 %{+m}
 
 Text starting with ',' is sent ONLY to bot-masters.
-%{help=common}%{+o|o}
-###  %bcommon (the +c 'common' flag)%b
-   Sometimes a lot of people use IRC from the same account, for example, a
-   public telnet site, where many people can have the same user@host. For
-   that reason, they can't use a traditional user record because they will
-   appear to all be the same user.
 
-   In such cases, create a user record for the account, and set it +c, or
-   "common access", via the chanset command. Marking it as "common access"
-   means that it shouldn't be used as a definitive address. When someone
-   introduces themselves to the bot (i.e. by /msg "hello") and matches
-   as a +c user, they will be given a new user record which identifies them
-   BY NICKNAME.
-
-   Obviously, people with that kind of user record shouldn't be given much
-   special access, as when they change nicknames the bot will identify them
-   as someone else.
-
-See also: chattr, whois
 %{help=+lang}%{+n}
 ###  %b+lang%b <language>
    Adds a new language to the top of the language list. All sections are
@@ -219,11 +195,6 @@ ssl-verify-dcc
 %{o|o}
    For ops:
       %baddlog       console      match        whois%b
-%{+t}
-   For botnet masters:
-      %b+bot         botattr      chhandle     chpass%b
-      %b+host        -bot         link         chaddr%b
-      %bboot         unlink       banner       dccstat%b
 %{+m|m}
    For channel masters:
       %bchattr       save         backup       reload%b

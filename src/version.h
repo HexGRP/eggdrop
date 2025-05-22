@@ -28,4 +28,4 @@
 
 #define EGG_STRINGVER "1.10.0"
 #define EGG_NUMVER 1100007
-#define EGG_PATCH "pythonfix"
+#define EGG_PATCH "unified-flags"
